@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "681275363583",
+    "project_id": "tb-chat-application",
+    "storage_bucket": "tb-chat-application.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:681275363583:android:e3f03bf41a69d9391e7cca",
+        "android_client_info": {
+          "package_name": "com.example.tb_chat_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGcz1ytYZSQSGu1rBpdA1LxBg67Q2SrNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
