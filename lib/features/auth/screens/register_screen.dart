@@ -6,7 +6,6 @@ import '../../../core/routes/app_router.dart';
 import '../../../widgets/gradient_button.dart';
 import '../../../widgets/auth/auth_step_header.dart';
 import '../../../widgets/auth/auth_text_field.dart';
-import '../../../widgets/auth/phone_field.dart';
 import '../../../widgets/auth/gradient_checkbox.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -19,26 +18,26 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _agreed = false;
 
   bool get _nameValid => _nameCtrl.text.trim().length >= 2;
   bool get _emailValid =>
       RegExp(r'^[\w.-]+@[\w.-]+\.\w+$').hasMatch(_emailCtrl.text.trim());
-  bool get _phoneValid => _phoneCtrl.text.trim().length >= 8;
-  bool get _canSubmit => _nameValid && _emailValid && _phoneValid && _agreed;
+  bool get _passwordValid => _passwordCtrl.text.length >= 6;
+  bool get _canSubmit => _nameValid && _emailValid && _passwordValid && _agreed;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
-    _phoneCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_canSubmit) return;
-    Navigator.pushNamed(context, AppRoutes.otpVerification);
+    Navigator.pushNamed(context, AppRoutes.profileSetup);
   }
 
   @override
@@ -51,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              AuthStepHeader(currentStep: 1, totalSteps: 3),
+              AuthStepHeader(currentStep: 1, totalSteps: 2),
               const SizedBox(height: 28),
               Expanded(
                 child: SingleChildScrollView(
@@ -80,15 +79,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 20),
-                      // Mobile number
-                      PhoneField(
-                        controller: _phoneCtrl,
-                        onChanged: (_, __) => setState(() {}),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'A 6-digit code will be sent to this number.',
-                        style: AppTextStyles.meta,
+                      // Password
+                      AuthTextField(
+                        label: 'Password',
+                        hint: 'Min. 6 characters',
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            size: 20, color: AppColors.muted),
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 20),
                       // Terms checkbox
@@ -136,7 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               // Bottom CTA
               GradientButton(
-                label: 'Send verification code',
+                label: 'Create account',
                 onPressed: _canSubmit ? _submit : null,
               ),
               const SizedBox(height: 16),

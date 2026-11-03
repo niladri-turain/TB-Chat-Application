@@ -5,7 +5,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../widgets/gradient_button.dart';
 import '../../../widgets/auth/auth_step_header.dart';
-import '../../../widgets/auth/phone_field.dart';
+import '../../../widgets/auth/auth_text_field.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -15,18 +15,24 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _phoneCtrl = TextEditingController();
-  bool _canSubmit = false;
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+
+  bool get _emailValid =>
+      RegExp(r'^[\w.-]+@[\w.-]+\.\w+$').hasMatch(_emailCtrl.text.trim());
+  bool get _passwordValid => _passwordCtrl.text.length >= 6;
+  bool get _canSubmit => _emailValid && _passwordValid;
 
   @override
   void dispose() {
-    _phoneCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_canSubmit) return;
-    Navigator.pushNamed(context, AppRoutes.otpVerification);
+    Navigator.pushNamed(context, AppRoutes.chats);
   }
 
   @override
@@ -54,20 +60,33 @@ class _SignInScreenState extends State<SignInScreen> {
                       Text('Welcome back', style: AppTextStyles.title),
                       const SizedBox(height: 8),
                       Text(
-                        'Sign in with the mobile number\nregistered with your team.',
+                        'Sign in with your email\nand password.',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.body.copyWith(color: AppColors.muted),
                       ),
                       const SizedBox(height: 32),
-                      PhoneField(
-                        controller: _phoneCtrl,
-                        showClearButton: true,
-                        onChanged: (_, number) =>
-                            setState(() => _canSubmit = number.length >= 8),
+                      AuthTextField(
+                        label: 'Work email',
+                        hint: 'niladri@company.com',
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.mail_outline_rounded,
+                            size: 20, color: AppColors.muted),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 16),
+                      AuthTextField(
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            size: 20, color: AppColors.muted),
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 20),
                       GradientButton(
-                        label: 'Send code',
+                        label: 'Sign in',
                         onPressed: _canSubmit ? _submit : null,
                       ),
                       const SizedBox(height: 12),
@@ -82,37 +101,6 @@ class _SignInScreenState extends State<SignInScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      // Info card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.line.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.line,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.info_outline_rounded,
-                                  size: 18, color: AppColors.muted),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Changed your number? Ask your workspace admin to update it before signing in.',
-                                style: AppTextStyles.body
-                                    .copyWith(color: AppColors.muted),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),

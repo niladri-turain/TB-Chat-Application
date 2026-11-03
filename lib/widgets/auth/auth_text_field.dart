@@ -3,7 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
 /// Labeled input field used across auth screens.
-class AuthTextField extends StatelessWidget {
+class AuthTextField extends StatefulWidget {
   final String label;
   final String? hint;
   final String? helperText;
@@ -15,6 +15,7 @@ class AuthTextField extends StatelessWidget {
   final String? errorText;
   final int? maxLength;
   final int maxLines;
+  final bool obscureText;
   final void Function(String)? onChanged;
 
   const AuthTextField({
@@ -30,37 +31,63 @@ class AuthTextField extends StatelessWidget {
     this.errorText,
     this.maxLength,
     this.maxLines = 1,
+    this.obscureText = false,
     this.onChanged,
   });
 
   @override
+  State<AuthTextField> createState() => _AuthTextFieldState();
+}
+
+class _AuthTextFieldState extends State<AuthTextField> {
+  late bool _obscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.obscureText;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final effectiveSuffix = widget.obscureText
+        ? GestureDetector(
+            onTap: () => setState(() => _obscured = !_obscured),
+            child: Icon(
+              _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              size: 20,
+              color: AppColors.muted,
+            ),
+          )
+        : widget.suffixIcon;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.nameLabel),
+        Text(widget.label, style: AppTextStyles.nameLabel),
         const SizedBox(height: 8),
         TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLength: maxLength,
-          maxLines: maxLines,
-          onChanged: onChanged,
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          maxLength: widget.maxLength,
+          maxLines: widget.maxLines,
+          obscureText: _obscured,
+          onChanged: widget.onChanged,
           style: AppTextStyles.body,
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: widget.hint,
             hintStyle: AppTextStyles.body.copyWith(color: AppColors.muted),
-            prefixIcon: prefixIcon != null
+            prefixIcon: widget.prefixIcon != null
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: prefixIcon,
+                    child: widget.prefixIcon,
                   )
                 : null,
             prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-            suffixIcon: suffixIcon != null
+            suffixIcon: effectiveSuffix != null
                 ? Padding(
                     padding: const EdgeInsets.only(right: 14),
-                    child: suffixIcon,
+                    child: effectiveSuffix,
                   )
                 : null,
             suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -88,12 +115,12 @@ class AuthTextField extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: AppColors.error),
             ),
-            errorText: errorText,
+            errorText: widget.errorText,
           ),
         ),
-        if (helperText != null && errorText == null) ...[
+        if (widget.helperText != null && widget.errorText == null) ...[
           const SizedBox(height: 4),
-          Text(helperText!, style: AppTextStyles.meta),
+          Text(widget.helperText!, style: AppTextStyles.meta),
         ],
       ],
     );
