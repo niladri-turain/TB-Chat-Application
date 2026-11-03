@@ -178,9 +178,9 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           data.illustration,
-          const SizedBox(height: 28),
+          const SizedBox(height: 16),
           RichText(
             text: TextSpan(
               style: GoogleFonts.poppins(
@@ -226,17 +226,24 @@ class _DotIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: List.generate(total, (i) {
         final active = i == current;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          width: active ? 28 : 8,
-          height: 8,
-          margin: const EdgeInsets.only(right: 6),
-          decoration: BoxDecoration(
-            color: active ? AppColors.indigo : AppColors.line,
-            borderRadius: BorderRadius.circular(4),
+        final isLast = i == total - 1;
+        return SizedBox(
+          width: isLast ? 10 : 20, // 28 (max dot width) + 6 (gap), except last
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              width: active ? 28 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: active ? AppColors.indigo : AppColors.line,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
           ),
         );
       }),
