@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
@@ -6,6 +7,7 @@ import '../../../core/routes/app_router.dart';
 import '../../../widgets/gradient_button.dart';
 import '../../../widgets/auth/auth_step_header.dart';
 import '../../../widgets/auth/auth_text_field.dart';
+import '../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -17,6 +19,8 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  bool _loading = false;
+  final _authService = AuthService();
 
   bool get _emailValid =>
       RegExp(r'^[\w.-]+@[\w.-]+\.\w+$').hasMatch(_emailCtrl.text.trim());
@@ -30,9 +34,22 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_canSubmit) return;
-    Navigator.pushNamed(context, AppRoutes.chats);
+  Future<void> _submit() async {
+    if (!_canSubmit || _loading) return;
+    setState(() => _loading = true);
+    try {
+      await _authService.login(_emailCtrl.text, _passwordCtrl.text);
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.chats, (route) => false);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.message(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -86,8 +103,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       const SizedBox(height: 20),
                       GradientButton(
-                        label: 'Sign in',
-                        onPressed: _canSubmit ? _submit : null,
+                        label: _loading ? 'Signing in…' : 'Sign in',
+                        onPressed: _canSubmit && !_loading ? _submit : null,
                       ),
                       const SizedBox(height: 12),
                       Row(

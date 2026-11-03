@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../../widgets/gradient_button.dart';
 import '../../../widgets/auth/auth_step_header.dart';
 import '../../../widgets/auth/auth_text_field.dart';
 import '../../../widgets/auth/gradient_checkbox.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _agreed = false;
+  bool _loading = false;
+  final _authService = AuthService();
 
   bool get _nameValid => _nameCtrl.text.trim().length >= 2;
   bool get _emailValid =>
@@ -35,9 +39,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_canSubmit) return;
-    Navigator.pushNamed(context, AppRoutes.profileSetup);
+  Future<void> _submit() async {
+    if (!_canSubmit || _loading) return;
+    setState(() => _loading = true);
+    try {
+      await _authService.register(
+        _emailCtrl.text,
+        _passwordCtrl.text,
+      );
+      if (!mounted) return;
+      Navigator.pushNamed(context, AppRoutes.profileSetup);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.message(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -135,8 +154,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               // Bottom CTA
               GradientButton(
-                label: 'Create account',
-                onPressed: _canSubmit ? _submit : null,
+                label: _loading ? 'Creating…' : 'Create account',
+                onPressed: _canSubmit && !_loading ? _submit : null,
               ),
               const SizedBox(height: 16),
               Text.rich(

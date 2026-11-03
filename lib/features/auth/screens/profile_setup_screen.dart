@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -5,6 +6,7 @@ import '../../../core/routes/app_router.dart';
 import '../../../widgets/gradient_button.dart';
 import '../../../widgets/auth/auth_step_header.dart';
 import '../../../widgets/auth/auth_text_field.dart';
+import '../services/auth_service.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -17,6 +19,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _nameCtrl = TextEditingController();
   final _designationCtrl = TextEditingController();
   String _status = 'Available';
+  bool _loading = false;
+  final _authService = AuthService();
 
   final List<String> _statusOptions = [
     'Available',
@@ -49,14 +53,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (result != null) setState(() => _status = result);
   }
 
-  void _continue() {
+  Future<void> _continue() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null && _nameCtrl.text.trim().isNotEmpty) {
+      setState(() => _loading = true);
+      try {
+        await _authService
+            .saveProfile(
+              uid: uid,
+              displayName: _nameCtrl.text.trim(),
+              designation: _designationCtrl.text.trim(),
+              about: _status,
+            )
+            .timeout(const Duration(seconds: 10));
+      } catch (_) {
+        // non-blocking — navigate even if save fails/times out
+      } finally {
+        if (mounted) setState(() => _loading = false);
+      }
+    }
+    if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(
         context, AppRoutes.chats, (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
@@ -64,7 +89,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              AuthStepHeader(currentStep: 3, totalSteps: 3),
+              AuthStepHeader(currentStep: 2, totalSteps: 2),
               const SizedBox(height: 28),
               Expanded(
                 child: SingleChildScrollView(
@@ -162,11 +187,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               // CTAs
               GradientButton(
                 label: 'Continue',
-                onPressed: _canContinue ? _continue : null,
+                onPressed: _canContinue && !_loading ? _continue : null,
               ),
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: _continue,
+                onTap: _loading ? null : _continue,
                 child: Text(
                   "I'll do this later",
                   style: AppTextStyles.body.copyWith(
@@ -179,6 +204,45 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ],
           ),
         ),
+      ),
+        ),
+        if (_loading)
+          Container(
+            color: Colors.black.withValues(alpha: 0.35),
+            child: const Center(
+              child: _SavingCard(),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SavingCard extends StatelessWidget {
+  const _SavingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+          const SizedBox(height: 16),
+          Text('Saving your profile…',
+              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text('Just a moment', style: AppTextStyles.meta),
+        ],
       ),
     );
   }
